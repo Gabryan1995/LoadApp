@@ -1,33 +1,130 @@
 package com.udacity
 
+import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
+import android.view.animation.LinearInterpolator
 import kotlin.properties.Delegates
+import android.view.animation.Animation
+import androidx.core.animation.doOnEnd
+import androidx.core.animation.doOnRepeat
+
 
 class LoadingButton @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
     private var widthSize = 0
     private var heightSize = 0
+    private var arcSweepAngle = 0f
+    private var progressBar = 0f
+    private val progressBarPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = Color.BLUE
+    }
+    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        textAlign = Paint.Align.CENTER
+        textSize = 55.0f
+        typeface = Typeface.create( "", Typeface.BOLD)
+        color = Color.WHITE
+    }
+    private val circlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = Color.YELLOW
+    }
 
-    private val valueAnimator = ValueAnimator()
+    private lateinit var valueAnimatorProgressBar: ValueAnimator
+    private lateinit var valueAnimatorCircle: ValueAnimator
 
     private var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Completed) { p, old, new ->
+        when(new) {
+            ButtonState.Loading -> {
+                startAnimatingProgressBar()
+            }
+            ButtonState.Completed -> {
 
+            }
+            ButtonState.Clicked -> {
+
+            }
+        }
     }
 
 
     init {
-
+        isClickable = true
+        buttonState = ButtonState.Completed
     }
 
+    private fun startAnimatingProgressBar() {
+        progressBar = 0f
+        arcSweepAngle = 0f
+        valueAnimatorProgressBar = ValueAnimator.ofFloat(0f, widthSize.toFloat())
+        valueAnimatorCircle = ValueAnimator.ofFloat(0f, 360f)
+        valueAnimatorProgressBar.setDuration(2000).apply {
+            addUpdateListener {
+                progressBar = it.animatedValue as Float
+                invalidate()
+            }
+            start()
+        }
+        valueAnimatorCircle.setDuration(2000).apply {
+            addUpdateListener {
+                arcSweepAngle = it.animatedValue as Float
+                invalidate()
+            }
+
+            doOnEnd {
+                isClickable = true
+                buttonState = ButtonState.Completed
+            }
+
+            start()
+        }
+    }
+
+    override fun performClick(): Boolean {
+        super.performClick()
+
+        isClickable = false
+        buttonState = ButtonState.Loading
+
+        return true
+    }
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
 
+        canvas?.drawColor(Color.CYAN)
+
+        if (buttonState == ButtonState.Completed) {
+            canvas?.drawText(
+                "Download",
+                widthSize / 2f,
+                heightSize / 2f + textPaint.textSize / 2f,
+                textPaint
+            )
+            arcSweepAngle = 0f
+        } else if (buttonState == ButtonState.Loading) {
+            canvas?.drawRect(0f, 0f, progressBar, heightSize.toFloat(), progressBarPaint)
+            canvas?.drawText(
+                "We are Loading",
+                widthSize / 2f,
+                heightSize / 2f + textPaint.textSize / 2f,
+                textPaint
+            )
+            canvas?.drawArc(((widthSize/4)*3-30).toFloat(),
+                (heightSize/2-30).toFloat(),
+                ((widthSize/4)*3+30).toFloat(),
+                (heightSize/2+30).toFloat(), 0f, arcSweepAngle, true, circlePaint)
+        }
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -42,5 +139,4 @@ class LoadingButton @JvmOverloads constructor(
         heightSize = h
         setMeasuredDimension(w, h)
     }
-
 }
