@@ -115,7 +115,7 @@ class LoadingButton @JvmOverloads constructor(
         } else if (buttonState == ButtonState.Loading) {
             canvas?.drawRect(0f, 0f, progressBar, heightSize.toFloat(), progressBarPaint)
             canvas?.drawText(
-                "We are Loading",
+                context.getString(R.string.button_loading),
                 widthSize / 2f,
                 heightSize / 2f + textPaint.textSize / 2f,
                 textPaint
