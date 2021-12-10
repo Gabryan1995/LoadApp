@@ -20,13 +20,23 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import android.database.Cursor
 
+import android.R.attr.name
+import android.app.DownloadManager.Query
+
+
+private val NOTIFICATION_ID = 0
+const val EXTRA_FILENAME = "com.udacity.LoadApp.FILENAME"
+const val EXTRA_STATUS = "com.udacity.LoadApp.STATUS"
 
 class MainActivity : AppCompatActivity() {
 
     private var downloadID: Long = 0
 
     private lateinit var downloadUrl: String
+    private lateinit var fileName: String
+    private lateinit var status: String
     private lateinit var notificationManager: NotificationManager
     private lateinit var pendingIntent: PendingIntent
     private lateinit var action: NotificationCompat.Action
@@ -52,14 +62,29 @@ class MainActivity : AppCompatActivity() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
 
-            val notificationManager = ContextCompat.getSystemService(
+            val downloadManager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+            val cursor: Cursor = downloadManager.query(Query().setFilterById(id!!))
+
+            if (cursor.moveToNext()) {
+                val currStatus = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
+                cursor.close()
+                if (currStatus == DownloadManager.STATUS_FAILED) {
+                    status = "Failed"
+                }
+                else if (currStatus == DownloadManager.STATUS_SUCCESSFUL) {
+                    status = "Success"
+                }
+            }
+
+            notificationManager = ContextCompat.getSystemService(
                 applicationContext,
                 NotificationManager::class.java
             ) as NotificationManager
 
             notificationManager.sendNotification(
-                applicationContext.getText(R.string.notification_description).toString(),
-                applicationContext
+                applicationContext,
+                fileName,
+                status
             )
         }
     }
@@ -87,12 +112,18 @@ class MainActivity : AppCompatActivity() {
     fun onRadioButtonClicked(view: View) {
         if (view is RadioButton) {
             when (view.getId()) {
-                R.id.glide_button ->
+                R.id.glide_button -> {
                     downloadUrl = "https://github.com/bumptech/glide.git"
-                R.id.loadapp_button ->
+                    fileName = applicationContext.getString(R.string.glide_button_text)
+                }
+                R.id.loadapp_button -> {
                     downloadUrl = URL
-                R.id.retrofit_button ->
+                    fileName = applicationContext.getString(R.string.loadapp_button_text)
+                }
+                R.id.retrofit_button -> {
                     downloadUrl = "https://github.com/square/retrofit.git"
+                    fileName = applicationContext.getString(R.string.retrofit_button_text)
+                }
             }
         }
     }
@@ -123,4 +154,37 @@ class MainActivity : AppCompatActivity() {
         private const val CHANNEL_ID = "channelId"
     }
 
+}
+
+// Extension Function for NotificationManager
+fun NotificationManager.sendNotification(applicationContext: Context, fileName: String, status: String) {
+    val contentIntent = Intent(applicationContext, DetailActivity::class.java).apply {
+        putExtra(EXTRA_FILENAME, fileName)
+        putExtra(EXTRA_STATUS, status)
+    }
+
+    val contentPendingIntent = PendingIntent.getActivity(
+        applicationContext,
+        NOTIFICATION_ID,
+        contentIntent,
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+    )
+
+    val builder = NotificationCompat.Builder(
+        applicationContext,
+        applicationContext.getString(R.string.notification_channel_id)
+    )
+        .setSmallIcon(R.drawable.ic_assistant_black_24dp)
+        .setContentTitle(applicationContext.getString(R.string.notification_title))
+        .setContentText(applicationContext.getText(R.string.notification_description).toString())
+        .setContentIntent(contentPendingIntent)
+        .setAutoCancel(true)
+        .addAction(
+            R.drawable.ic_assistant_black_24dp,
+            applicationContext.getString(R.string.notification_button),
+            contentPendingIntent
+        )
+        .setPriority(NotificationCompat.PRIORITY_HIGH)
+
+    notify(NOTIFICATION_ID, builder.build())
 }
