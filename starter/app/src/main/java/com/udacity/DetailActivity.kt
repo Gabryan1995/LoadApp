@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.text.InputType
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.motion.widget.MotionLayout
+import com.google.android.material.appbar.AppBarLayout
 import kotlinx.android.synthetic.main.activity_detail.*
 import kotlinx.android.synthetic.main.content_detail.*
 
@@ -29,6 +31,13 @@ class DetailActivity : AppCompatActivity() {
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
         }
+
+        coordinateMotion()
+    }
+
+    private fun coordinateMotion() {
+        val motionLayout: MotionLayout = findViewById(R.id.motion_layout)
+        motionLayout.transitionToEnd()
     }
 
 }
