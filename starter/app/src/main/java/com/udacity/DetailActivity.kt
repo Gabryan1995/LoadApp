@@ -1,5 +1,6 @@
 package com.udacity
 
+import android.app.NotificationManager
 import android.content.Intent
 import android.os.Bundle
 import android.widget.TextView
@@ -29,5 +30,12 @@ class DetailActivity : AppCompatActivity() {
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.cancelAll()
     }
 }

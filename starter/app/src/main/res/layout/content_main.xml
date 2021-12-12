@@ -47,6 +47,9 @@
         android:layout_height="60dp"
         android:layout_margin="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/radio_group" />
+        app:layout_constraintTop_toBottomOf="@+id/radio_group"
+        app:backgroundColor="@color/colorPrimaryDark"
+        app:textColor="@color/colorAccent"
+        app:progressBarColor="@color/colorPrimary" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

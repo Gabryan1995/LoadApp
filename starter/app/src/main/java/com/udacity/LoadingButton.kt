@@ -20,20 +20,30 @@ import androidx.core.animation.doOnRepeat
 class LoadingButton @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
+
+    companion object {
+        private const val DEFAULT_BACKGROUND_COLOR = Color.CYAN
+        private const val DEFAULT_TEXT_COLOR = Color.WHITE
+        private const val DEFAULT_PROGRESSBAR_COLOR = Color.BLUE
+    }
+    private var bgColor = DEFAULT_BACKGROUND_COLOR
+    private var textColor = DEFAULT_TEXT_COLOR
+    private var progressBarColor = DEFAULT_PROGRESSBAR_COLOR
     private var widthSize = 0
     private var heightSize = 0
     private var arcSweepAngle = 0f
     private var progressBar = 0f
     private val progressBarPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = Color.BLUE
+    }
+    private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
     }
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
         textAlign = Paint.Align.CENTER
         textSize = 55.0f
         typeface = Typeface.create( "", Typeface.BOLD)
-        color = Color.WHITE
     }
     private val circlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
@@ -61,6 +71,7 @@ class LoadingButton @JvmOverloads constructor(
     init {
         isClickable = true
         buttonState = ButtonState.Completed
+        setupAttributes(attrs)
     }
 
     private fun startAnimatingProgressBar() {
@@ -102,7 +113,7 @@ class LoadingButton @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
 
-        canvas?.drawColor(Color.CYAN)
+        canvas?.drawPaint(bgPaint)
 
         if (buttonState == ButtonState.Completed) {
             canvas?.drawText(
@@ -138,5 +149,19 @@ class LoadingButton @JvmOverloads constructor(
         widthSize = w
         heightSize = h
         setMeasuredDimension(w, h)
+    }
+
+    private fun setupAttributes(attrs: AttributeSet?) {
+        val typedArray = context.theme.obtainStyledAttributes(attrs, R.styleable.LoadingButton, 0, 0)
+
+        bgColor = typedArray.getColor(R.styleable.LoadingButton_backgroundColor, DEFAULT_BACKGROUND_COLOR)
+        textColor = typedArray.getColor(R.styleable.LoadingButton_textColor, DEFAULT_TEXT_COLOR)
+        progressBarColor = typedArray.getColor(R.styleable.LoadingButton_progressBarColor, DEFAULT_PROGRESSBAR_COLOR)
+
+        bgPaint.color = bgColor
+        textPaint.color = textColor
+        progressBarPaint.color = progressBarColor
+
+        typedArray.recycle()
     }
 }
